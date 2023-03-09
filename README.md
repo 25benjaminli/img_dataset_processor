@@ -4,7 +4,7 @@
 While investigating existing solutions, such as using websites like roboflow, splitting mechanisms and evaluating & deleting certain images was not possible.
 
 Directions:
-1. Install dependencies - `pipenv install -r requirements.txt`. Make sure you are using pipenv. If you don't have pipenv, install it with `pip install pipenv`.
+1. Install dependencies - `pipenv install -r requirements.txt`. Make sure you are using pipenv. If you don't have pipenv, install it with `pip install pipenv`. Afterwards, run `pipenv shell` to enter the virtual environment.
 2. Import a dataset (ideally, annotated and already in labeled format - right now only YOLOv5 format is supported)
 3. Visit one of the jupyter notebooks and read the instructions there.
 4. Run certain cells of the notebook.
