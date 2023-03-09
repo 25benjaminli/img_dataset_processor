@@ -11,4 +11,6 @@ Directions:
 
 
 Notes:
-1. Right now, this only runs from jupyter notebooks. I'll probably add python scripts later
+
+1. At its current state, this is **incomplete** and will not work for some time. Check back later for updates.
+2. Right now, this only runs from jupyter notebooks. I'll probably add python scripts later
