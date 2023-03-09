@@ -8,3 +8,7 @@ Directions:
 2. Import a dataset (ideally, annotated and already in labeled format - right now only YOLOv5 format is supported)
 3. Visit one of the jupyter notebooks and read the instructions there.
 4. Run certain cells of the notebook.
+
+
+Notes:
+1. Right now, this only runs from jupyter notebooks. I'll probably add python scripts later
