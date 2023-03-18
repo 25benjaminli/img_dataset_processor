@@ -1,0 +1,28 @@
+import os
+import argparse
+import utils.misc
+import utils.restructure
+import shutil
+import utils
+
+# get command line arguments
+parser = argparse.ArgumentParser()
+
+parser.add_argument('--input', type=str, help='path to old dataset - within the datasets folder', required=True)
+
+args = parser.parse_args()
+
+if not os.path.exists(f'datasets/{args.input}'):
+    print(f"dataset \"{args.input}\" does not exist")
+    exit()
+
+if not os.path.exists(f'datasets/{args.input}_copy'):
+    # make a copy
+    print("making a copy of the current dataset so we don't lose it!")
+    shutil.copytree(f'datasets/{args.input}', f'datasets/{args.input}_copy')
+
+utils.global_vars.ds_path = f'datasets/{args.input}'
+utils.global_vars.names, utils.global_vars.data = utils.misc.get_names_and_yaml()
+
+utils.restructure.clean_roboflow_dataset()
+check_for_incorrect_labels()

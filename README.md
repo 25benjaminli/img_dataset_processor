@@ -14,8 +14,7 @@ It aims to have many built in methods that roboflow lacks, including...
 
 Notes:
 
-1. Right now, this only runs from jupyter notebooks. I'll probably add python scripts later
-2. This only supports **roboflow-formated datasets**, as roboflow is probably the most popular website for generating datasets. I might add support for other formats later.
+1. This only supports **roboflow-formated datasets**, as roboflow is probably the most popular website for generating datasets. I might add support for other formats later.
 
 Directions:
 1. Install dependencies - `pipenv install -r requirements.txt`. Make sure you are using pipenv. If you don't have pipenv, install it with `pip install pipenv`. Afterwards, run `pipenv shell` to enter the virtual environment.
