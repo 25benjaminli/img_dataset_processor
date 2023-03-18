@@ -59,6 +59,7 @@ def clean_roboflow_dataset():
 
 
 def check_for_incorrect_labels():
+    incorrects = []
     for split in os.listdir(f'{global_vars.ds_path}'):
         if split == 'train' or split == 'valid' or split == 'test':
             for image in os.listdir(f'{global_vars.ds_path}/{split}/images'):
@@ -77,7 +78,9 @@ def check_for_incorrect_labels():
                                 matches = True
                                 break
                 if not matches:
-                    print(f'{global_vars.ds_path}/{split}/images/{image}')
+                    incorrects.append(image)
+    
+    return incorrects
 
 
 # def rebalance_dataset(**kwargs):

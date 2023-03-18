@@ -1,6 +1,7 @@
 import os
 import argparse
 import utils.misc
+import utils.restructure
 import shutil
 import utils
 # get command line arguments
@@ -25,5 +26,7 @@ if not os.path.exists(f'datasets/{args.input}_copy'):
     shutil.copytree(f'datasets/{args.input}', f'datasets/{args.input}_copy')
 
 utils.global_vars.ds_path = f'datasets/{args.input}'
+utils.global_vars.names, utils.global_vars.data = utils.misc.get_names_and_yaml()
 
 utils.misc.check_freqs()
+utils.restructure.check_for_incorrect_labels()

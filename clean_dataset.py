@@ -25,4 +25,6 @@ utils.global_vars.ds_path = f'datasets/{args.input}'
 utils.global_vars.names, utils.global_vars.data = utils.misc.get_names_and_yaml()
 
 utils.restructure.clean_roboflow_dataset()
-check_for_incorrect_labels()
+
+# does not REMOVE incorrect labels, only CHECKS
+utils.restructure.check_for_incorrect_labels()

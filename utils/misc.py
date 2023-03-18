@@ -19,12 +19,10 @@ def get_names_and_yaml():
 
     # get all names from data.yaml
     names = eval(data.split('names: ')[1])
-    print(names)
 
     # rewrite train, val, test to go to final_ds/{split}/images instead of ../{split}/images
     data = data.replace('../train/images', f'{base_name}/train/images').replace('../valid/images', f'{base_name}/valid/images').replace('../test/images', f'{base_name}/test/images')
     
-    print('data: ', data)
 
     return list(names), data
 
