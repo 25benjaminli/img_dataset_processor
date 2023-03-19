@@ -19,13 +19,15 @@ data.yaml
 import os
 import argparse
 import utils.restructure_obj
-import utils.global_vars
 import utils.misc
 import shutil
 from dataset import Dataset
 
 # get command line arguments
-def parse_args():
+
+
+
+def main():
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--input', type=str, help='path to old dataset - within the datasets folder', required=True)
@@ -50,23 +52,12 @@ def parse_args():
     parser.add_argument('--exclude', type=str, default="", help='comma delimited list of classes to exclude, no spaces')
 
     # only for offline augmentation
-    parser.add_argument('--augment', type=bool, default=False, help='augment or not')
+    parser.add_argument('--augment_by', type=bool, default=False, help='augment by (multiplier)')
+
+    parser.add_argument('--augment_options', type=str, default="", help='comma delimited list of augmentations to use, no spaces. Available: flip, rotate, blur, noise, brightness, contrast, sharpness, saturation, hue, mosaic')
 
     parser.add_argument('--synth_aug', type=bool, default=False, help='synth augment or not')
     
     args = parser.parse_args()
-    
-    assert os.path.exists(f'datasets/{args.input}'), f"dataset \"{args.input}\" does not exist"
-
-    assert args.train_split + args.valid_split + args.test_split == 1, "train, valid, and test splits must add up to 1"
-
-    assert args.backgrounds > 0, "backgrounds must be greater than 0"
-
-    assert args.b_delimiter != "", "background delimiter cannot be empty"
-
-    return args
-
-def main():
-    args = parse_args()
     
     ds = Dataset(args)

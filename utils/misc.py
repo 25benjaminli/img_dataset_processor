@@ -2,16 +2,17 @@ import os
 import shutil
 from utils import global_vars
 from os.path import normpath, basename
+from dataset import Dataset
 
 def reset_dataset_to_orig():
     shutil.rmtree(f'{global_vars.ds_path}')
     shutil.copytree(f'{global_vars.ds_path}_copy', f'{global_vars.ds_path}')
 
-def get_names_and_yaml():
+def get_names_and_yaml(dataset: Dataset):
     """
     Read data.yaml file and retrieve label names and file contents
     """
-    base_name = basename(normpath(global_vars.ds_path))
+    base_name = basename(normpath(dataset.get_args().input))
     with open(f'{global_vars.ds_path}/data.yaml', 'r') as f:
         data = f.read()
 
@@ -24,8 +25,8 @@ def get_names_and_yaml():
     # rewrite train, val, test to go to final_ds/{split}/images instead of ../{split}/images
     data = data.replace('../train/images', f'{base_name}/train/images').replace('../valid/images', f'{base_name}/valid/images').replace('../test/images', f'{base_name}/test/images')
     
-    global_vars.names = names
-    global_vars.datayaml = data
+    dataset.names = names
+    dataset.datayaml = data
 
     return list(names), data
 

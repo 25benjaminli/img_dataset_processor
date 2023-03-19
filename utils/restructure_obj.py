@@ -7,7 +7,6 @@ import shutil
 import pandas as pd
 import random
 import numpy as np
-from utils import global_vars
 
 def remove_existing_backgrounds():
     # remove all background images from {global_vars.ds_path}

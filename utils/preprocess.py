@@ -4,7 +4,6 @@ from PIL import Image
 import shutil
 import pandas as pd
 import numpy as np
-from utils import global_vars
 
 def generate_CLAHE(image_path, output_path, grayscale = False):
     if not grayscale:
