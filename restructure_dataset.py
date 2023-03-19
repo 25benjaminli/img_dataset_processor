@@ -18,36 +18,70 @@ data.yaml
 """
 import os
 import argparse
-import utils
+import utils.restructure
+import utils.global_vars
+import utils.misc
+import shutil
+from dataset import Dataset
 
 # get command line arguments
+def parse_args():
+    parser = argparse.ArgumentParser()
 
-parser = argparse.ArgumentParser()
+    parser.add_argument('--input', type=str, help='path to old dataset - within the datasets folder', required=True)
+    parser.add_argument('--output', type=str, help='path to new dataset - within the datasets folder', required=True)
+    parser.add_argument('--detection_type', type=str, default='object', help='type of detection', choices=['object', 'segmentation', 'classification'])
+    parser.add_argument('--format', type=str, default='yolo', help='format of dataset', choices=['yolo', 'coco'])
 
-parser.add_argument('--input', type=str, help='path to old dataset - within the datasets folder', required=True)
-parser.add_argument('--output', type=str, help='path to new dataset - within the datasets folder', required=True)
-parser.add_argument('--detection_type', type=str, default='object', help='type of detection', choices=['object', 'segmentation', 'classification'])
-parser.add_argument('--format', type=str, default='yolo', help='format of dataset', choices=['yolo', 'coco'])
+    parser.add_argument('--split_type', type=str, default='images', help='type of split', choices=['images', 'objects'])
+    parser.add_argument('--train_split', type=float, default=0.8, help='train ratio')
+    parser.add_argument('--valid_split', type=float, default=0.1, help='valid ratio')
+    parser.add_argument('--test_split', type=float, default=0.1, help='test ratio')
 
-parser.add_argument('--split_type', type=str, default='images', help='type of split', choices=['images', 'objects'])
-parser.add_argument('--train_split', type=float, default=0.8, help='train ratio')
-parser.add_argument('--valid_split', type=float, default=0.1, help='valid ratio')
-parser.add_argument('--test_split', type=float, default=0.1, help='test ratio')
+    parser.add_argument('--resize_to', type=str, default='416x416', help='resize images in dataset - format: widthxheight')
+    parser.add_argument('--contrast', type=str, default='CLAHE', help='contrast type of images in dataset', choices=['CLAHE', 'AHE', ''])
+    parser.add_argument('--grayscale', type=bool, default=False, help='grayscale or not')
+    # parser.add_argument('--custom_preprocess', type=str, default="", help='path to file with custom preprocessing techniques')
 
-parser.add_argument('--resize_to', type=str, default='416x416', help='resize images in dataset - format: widthxheight')
-parser.add_argument('--contrast', type=str, default='CLAHE', help='contrast type of images in dataset', choices=['CLAHE', 'AHE', ''])
-parser.add_argument('--grayscale', type=bool, default=False, help='grayscale or not')
-parser.add_argument('--custom_preprocess', type=str, default="", help='path to file with custom preprocessing techniques')
+    parser.add_argument('--backgrounds', type=int, default=0, help='maximum ratio of background to total dataset size')
+    parser.add_argument('--b_delimiter', type=str, default='_background', help='delimiter for background images')
 
-parser.add_argument('--backgrounds', type=int, default=0, help='maximum ratio of background to total dataset size')
+    # comma delimited list of classes to exclude
+    parser.add_argument('--exclude', type=str, default="", help='comma delimited list of classes to exclude, no spaces')
 
-# offline augmentation not used
-# parser.add_argument('--augment', type=bool, default=False, help='augment or not')
+    # only for offline augmentation
+    parser.add_argument('--augment', type=bool, default=False, help='augment or not')
 
-# synthetic augmentation not used
-# parser.add_argument('--synth_aug', type=bool, default=False, help='synth augment or not')
+    parser.add_argument('--synth_aug', type=bool, default=False, help='synth augment or not')
+    
+    args = parser.parse_args()
+    
+    assert os.path.exists(f'datasets/{args.input}'), f"dataset \"{args.input}\" does not exist"
 
+    assert args.train_split + args.valid_split + args.test_split == 1, "train, valid, and test splits must add up to 1"
 
-args = parser.parse_args()
+    assert args.backgrounds > 0, "backgrounds must be greater than 0"
 
-print(args)
+    assert args.b_delimiter != "", "background delimiter cannot be empty"
+
+    return args
+
+def main():
+    args = parse_args()
+    if not os.path.exists(f'datasets/{args.input}_copy'):
+        # make a copy
+        print("making a copy of the current dataset so we don't lose it!")
+        shutil.copytree(f'datasets/{args.input}', f'datasets/{args.input}_copy')
+
+    ds = Dataset(args)
+
+    
+
+    # utils.global_vars.ds_path = f'datasets/{args.input}'
+    # utils.global_vars.send_to = f'datasets/{args.output}'
+    
+    # utils.misc.get_names_and_yaml()
+    # utils.restructure.clean_roboflow_dataset()
+    # utils.restructure.check_for_incorrect_labels()
+    # utils.global_vars.args = args
+    # utils.restructure.split_dataset_obj()

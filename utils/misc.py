@@ -8,8 +8,9 @@ def reset_dataset_to_orig():
     shutil.copytree(f'{global_vars.ds_path}_copy', f'{global_vars.ds_path}')
 
 def get_names_and_yaml():
-    # doing stuff
-    # read data.yaml from {old_base}
+    """
+    Read data.yaml file and retrieve label names and file contents
+    """
     base_name = basename(normpath(global_vars.ds_path))
     with open(f'{global_vars.ds_path}/data.yaml', 'r') as f:
         data = f.read()
@@ -23,6 +24,8 @@ def get_names_and_yaml():
     # rewrite train, val, test to go to final_ds/{split}/images instead of ../{split}/images
     data = data.replace('../train/images', f'{base_name}/train/images').replace('../valid/images', f'{base_name}/valid/images').replace('../test/images', f'{base_name}/test/images')
     
+    global_vars.names = names
+    global_vars.datayaml = data
 
     return list(names), data
 

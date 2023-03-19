@@ -1,7 +1,11 @@
 import os
 
 path = os.getcwd()
-data = ""
+datayaml = ""
 names = []
+exclude = []
 
 ds_path = ''
+send_to = ''
+
+args = {}
