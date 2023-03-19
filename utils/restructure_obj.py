@@ -241,14 +241,6 @@ def reorganize_to_final(ftrain, fval, ftest):
     with open(f"datasets/{global_vars.send_to}/data.yaml", "w") as file:
         file.write(global_vars.datayaml)
 
-def split_dataset_obj():
-    """
-    function to split dataset (object detection)
-    """
-    delete_all_folders()
-    move_to_combined()
-    organize_to_names()
-    reorganize_to_final(get_train_val_test_splits())
 
     
     

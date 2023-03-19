@@ -18,7 +18,7 @@ data.yaml
 """
 import os
 import argparse
-import utils.restructure
+import utils.restructure_obj
 import utils.global_vars
 import utils.misc
 import shutil
@@ -68,20 +68,5 @@ def parse_args():
 
 def main():
     args = parse_args()
-    if not os.path.exists(f'datasets/{args.input}_copy'):
-        # make a copy
-        print("making a copy of the current dataset so we don't lose it!")
-        shutil.copytree(f'datasets/{args.input}', f'datasets/{args.input}_copy')
-
+    
     ds = Dataset(args)
-
-    
-
-    # utils.global_vars.ds_path = f'datasets/{args.input}'
-    # utils.global_vars.send_to = f'datasets/{args.output}'
-    
-    # utils.misc.get_names_and_yaml()
-    # utils.restructure.clean_roboflow_dataset()
-    # utils.restructure.check_for_incorrect_labels()
-    # utils.global_vars.args = args
-    # utils.restructure.split_dataset_obj()

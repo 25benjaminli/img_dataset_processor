@@ -1,7 +1,7 @@
 import os
 import argparse
 import utils.misc
-import utils.restructure
+import utils.restructure_obj
 import shutil
 import utils
 
@@ -24,7 +24,7 @@ if not os.path.exists(f'datasets/{args.input}_copy'):
 utils.global_vars.ds_path = f'datasets/{args.input}'
 utils.misc.get_names_and_yaml()
 
-utils.restructure.clean_roboflow_dataset()
+utils.restructure_obj.clean_roboflow_dataset()
 
 # does not REMOVE incorrect labels, only CHECKS
-utils.restructure.check_for_incorrect_labels()
+utils.restructure_obj.check_for_incorrect_labels()

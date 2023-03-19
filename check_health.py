@@ -1,7 +1,7 @@
 import os
 import argparse
 import utils.misc
-import utils.restructure
+import utils.restructure_obj
 import shutil
 import utils
 # get command line arguments
@@ -29,4 +29,4 @@ utils.global_vars.ds_path = f'datasets/{args.input}'
 utils.misc.get_names_and_yaml()
 
 utils.misc.check_freqs()
-utils.restructure.check_for_incorrect_labels()
+utils.restructure_obj.check_for_incorrect_labels()
