@@ -31,7 +31,7 @@ def main():
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--input', type=str, help='path to old dataset - within the datasets folder', required=True)
-    parser.add_argument('--output', type=str, help='path to new dataset - within the datasets folder', required=True)
+    parser.add_argument('--output', type=str, help='path to new dataset - within the datasets folder')
     parser.add_argument('--detection_type', type=str, default='object', help='type of detection', choices=['object', 'segmentation', 'classification'])
     parser.add_argument('--format', type=str, default='yolo', help='format of dataset', choices=['yolo', 'coco'])
 
@@ -59,5 +59,10 @@ def main():
     parser.add_argument('--synth_aug', type=bool, default=False, help='synth augment or not')
     
     args = parser.parse_args()
+
+    if args.output is None:
+        args.output = args.input + "_processed"
     
     ds = Dataset(args)
+
+    ds.split_dataset_obj()

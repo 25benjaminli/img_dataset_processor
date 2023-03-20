@@ -1,19 +1,14 @@
 import os
 import shutil
-from utils import global_vars
 from os.path import normpath, basename
 from dataset import Dataset
-
-def reset_dataset_to_orig():
-    shutil.rmtree(f'{global_vars.ds_path}')
-    shutil.copytree(f'{global_vars.ds_path}_copy', f'{global_vars.ds_path}')
 
 def get_names_and_yaml(dataset: Dataset):
     """
     Read data.yaml file and retrieve label names and file contents
     """
     base_name = basename(normpath(dataset.get_args().input))
-    with open(f'{global_vars.ds_path}/data.yaml', 'r') as f:
+    with open(f'{dataset.get_args().input}/data.yaml', 'r') as f:
         data = f.read()
 
     # remove everything after "roboflow"
@@ -24,17 +19,14 @@ def get_names_and_yaml(dataset: Dataset):
 
     # rewrite train, val, test to go to final_ds/{split}/images instead of ../{split}/images
     data = data.replace('../train/images', f'{base_name}/train/images').replace('../valid/images', f'{base_name}/valid/images').replace('../test/images', f'{base_name}/test/images')
-    
-    dataset.names = names
-    dataset.datayaml = data
 
     return list(names), data
 
 
-def check_freqs():
-    splits = [os.listdir(f'{global_vars.ds_path}/train/images'), os.listdir(f'{global_vars.ds_path}/valid/images'), os.listdir(f'{global_vars.ds_path}/test/images')]
+def check_freqs(dataset: Dataset):
+    splits = [os.listdir(f'{dataset.get_args().ds_path}/train/images'), os.listdir(f'{dataset.get_args().ds_path}/valid/images'), os.listdir(f'{dataset.get_args().ds_path}/test/images')]
     print("printing frequency information")
-    trainlen, vallen, testlen = len(os.listdir(f'{global_vars.ds_path}/train/images')), len(os.listdir(f'{global_vars.ds_path}/valid/images')), len(os.listdir(f'{global_vars.ds_path}/test/images'))
+    trainlen, vallen, testlen = len(os.listdir(f'{dataset.get_args().ds_path}/train/images')), len(os.listdir(f'{dataset.get_args().ds_path}/valid/images')), len(os.listdir(f'{dataset.get_args().ds_path}/test/images'))
     print(trainlen, vallen, testlen)
     print("total dataset size: ", trainlen + vallen + testlen)
 
@@ -43,14 +35,14 @@ def check_freqs():
     splitarr = ['train', 'valid', 'test']
     # dictionary storing percentage frequencies across splits
     freqs = {}
-    for name in global_vars.names:
+    for name in dataset.names:
         freqs[name] = [0,0,0]
     
     freqs["background"] = [0,0,0]
 
     
     for i in range(len(splits)):
-        for name in global_vars.names:
+        for name in dataset.names:
             for file in splits[i]:
                 if name.lower() in file.lower():
                     freqs[name][i] += 1
@@ -65,7 +57,7 @@ def check_freqs():
     
     print(freqs)
     
-    for name in global_vars.names:
+    for name in dataset.names:
         if sum(freqs[name]) == 0:
             continue
         for i in range(len(freqs[name])):

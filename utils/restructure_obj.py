@@ -100,20 +100,7 @@ def delete_all_folders():
     except:
         pass
 
-def move_to_combined():
-    for split in os.listdir(f"{global_vars.ds_path}"):
-        if split == 'train' or split == 'valid' or split == 'test':
-            for image in os.listdir(f"{global_vars.ds_path}/{split}/images"):
-                img_name, ext = os.path.splitext(image)
-                if len(global_vars.exclude) == 0:
-                    shutil.copy(f"{global_vars.ds_path}/{split}/images/{image}", "/combined_ds/images")
-                    shutil.copy(f"{global_vars.ds_path}/{split}/labels/{img_name}.txt", "/combined_ds/labels")
-                else:
-                    for name in global_vars.exclude:
-                        if name.lower() in image.lower():
-                            shutil.copy(f"{global_vars.ds_path}/{split}/images/{image}", "/combined_ds/images")
-                            shutil.copy(f"{global_vars.ds_path}/{split}/labels/{img_name}.txt", "/combined_ds/labels")
-                            break
+    
 def rm_and_make(dir_name):
     if os.path.exists(dir_name):
         shutil.rmtree(dir_name)
