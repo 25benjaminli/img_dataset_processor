@@ -6,6 +6,7 @@ import utils.preprocess
 import shutil
 import cv2
 import numpy as np
+from os.path import normpath, basename
 
 
 class Dataset():
@@ -13,6 +14,7 @@ class Dataset():
     Takes in command line arguments and provides a suite of tools 
     for manipulating and processing the dataset.
     """
+
     _args = {}
     names = []
     datayaml = {}
@@ -21,11 +23,18 @@ class Dataset():
         self._args = args
 
         # clean the dataset and check for incorrect labels
-        utils.restructure_obj.clean_roboflow_dataset()
-        utils.restructure_obj.check_for_incorrect_labels()
+        print("cleaning roboflow dataset...")
+        self.clean_roboflow_dataset()
+
+        print("removing bgs... - need to store later")
+        self.remove_existing_backgrounds()
+        
+        print("checking for incorrect labels...")
+        self.check_for_incorrect_labels()
+
 
         # get names and data.yaml
-        self.names, self.datayaml = utils.misc.get_names_and_yaml(self)
+        self.names, self.datayaml = self.get_names_and_yaml()
         
         self.check_args_validity()
 
@@ -33,8 +42,106 @@ class Dataset():
             # make a copy
             print("making a copy of the current dataset so we don't lose it!")
             shutil.copytree(f'datasets/{args.input}', f'datasets/{args.input}_copy')
-        
 
+    def remove_all_supp(self) -> None:
+        shutil.rmtree('datasets/combined_ds')
+        shutil.rmtree('datasets/org_ds')
+    
+    def get_names_and_yaml(self) -> None:
+        """
+        Read data.yaml file and retrieve label names and file contents
+        """
+        base_name = basename(normpath(self._args.input))
+        with open(f'datasets/{self._args.input}/data.yaml', 'r') as f:
+            data = f.read()
+
+        # remove everything after "roboflow"
+        data = data.split('roboflow')[0] # this will be the same...
+
+        # get all names from data.yaml
+        names = eval(data.split('names: ')[1])
+
+        # rewrite train, val, test to go to final_ds/{split}/images instead of ../{split}/images
+        data = data.replace('../train/images', f'{base_name}/train/images').replace('../valid/images', f'{base_name}/valid/images').replace('../test/images', f'{base_name}/test/images')
+
+        return list(names), data
+
+    def clean_roboflow_dataset(self) -> None:
+        for split in os.listdir():
+            if split == 'test' or split == 'train' or split == 'valid':
+                print(split)
+                for image in os.listdir(f'datasets/{self._args.input}/{split}/images'):
+                    # get index of "_jpg"
+                    image_name, ext = os.path.splitext(image)
+                    new_image = image[:image.rfind('_')] + ext
+                    # replace current image with new image
+                    # get image path
+                    new_image_name  = image[:image.rfind('_')]
+
+                    os.rename(f'datasets/{self._args.input}/{split}/images/{image}', f'datasets/{self._args.input}/{split}/images/{new_image}')
+                    os.rename(f'datasets/{self._args.input}/{split}/labels/{image_name}.txt', f'datasets/{self._args.input}/{split}/labels/{new_image_name}.txt')
+
+                    found = False
+                    for comp_name in self.names:
+                        if comp_name.lower() in new_image.lower():
+                            found = True
+                            break
+                    
+                    if not found:
+                        # retrieve label from corresponding txt file
+                        if os.path.exists(f'datasets/{self._args.input}/{split}/labels/{new_image_name}.txt'):   
+                            with open(f'datasets/{self._args.input}/{split}/labels/{new_image_name}.txt', 'r') as f:
+                                label = f.read()
+                                if len(label) > 0:
+                                    label = int(label.split(' ')[0])
+                                    # copy image to corresponding folder
+                                    os.rename(f'datasets/{self._args.input}/{split}/images/{new_image}', f'datasets/{self._args.input}/{split}/images/{self.names[label]}-{new_image}')
+                                    # copy label to corresponding folder
+                                    os.rename(f'datasets/{self._args.input}/{split}/labels/{new_image_name}.txt', f'datasets/{self._args.input}/{split}/labels/{self.names[label]}-{new_image_name}.txt')
+
+    def check_for_incorrect_labels(self) -> None:
+        incorrects = []
+        for split in os.listdir(f'datasets/{self._args.input}'):
+            if split == 'train' or split == 'valid' or split == 'test':
+                for image in os.listdir(f'datasets/{self._args.input}/{split}/images'):
+                    matches = False
+                    for name in self.names:
+                        if name.lower() in image.lower():
+                            if not os.path.exists(f'datasets/{self._args.input}/{split}/labels/{image[:-4]}.txt'):
+                                continue
+                            with open(f'datasets/{self._args.input}/{split}/labels/{image[:-4]}.txt', 'r') as f:
+                                data = f.read()
+                                if len(data) == 0:
+                                    continue
+                                data = int(data.split(' ')[0])
+
+                                if self.names[data] == name:
+                                    matches = True
+                                    break
+                    if not matches:
+                        incorrects.append(image)
+        
+        return incorrects
+    
+    def remove_existing_backgrounds(self) -> None:
+        """
+        remove all background images from {self._args.input}
+        self._args.input, global_vars.args.b_delimiter
+        
+        """
+        for split in os.listdir(f'datasets/{self._args.input}'):
+            if split == 'train' or split == 'valid' or split == 'test':
+                for filename in os.listdir(f'datasets/{self._args.input}/{split}/images'):
+                    first_part, ext = os.path.splitext(filename)
+                    if self._args.b_delimiter in filename:
+                        os.remove(f'datasets/{self._args.input}/{split}/images/{filename}')
+                        try:
+                            os.remove(f'datasets/{self._args.input}/{split}/labels/{first_part}.txt')
+                        except:
+                            continue
+
+        print(len(os.listdir(f'datasets/{self._args.input}/train/images')) + len(os.listdir(f'datasets/{self._args.input}/valid/images')) + len(os.listdir(f'datasets/{self._args.input}/test/images')))
+    
     def check_args_validity(self) -> None:
         assert os.path.exists(f'datasets/{self._args.input}'), f"dataset \"{self._args.input}\" does not exist"
         assert self._args.train_split + self._args.valid_split + self._args.test_split == 1, "train, valid, and test splits must add up to 1"
@@ -50,13 +157,13 @@ class Dataset():
         Checks stats of final dataset
         """
 
-        utils.misc.check_freqs(self.get_args().output)
+        utils.misc.check_freqs(self._args.output)
     
     def check_stats_of_initial(self) -> None:
         """
         Checks stats of initial dataset
         """
-        utils.misc.check_freqs(self.get_args().input)
+        utils.misc.check_freqs(self._args.input)
     
     def get_output_path(self) -> str:
         """
@@ -138,12 +245,13 @@ class Dataset():
             if split == 'train' or split == 'test' or split == 'valid':
                 for img_path in os.listdir(f'{base}/{split}/images'):
                     image = cv2.imread(f'{base}/{split}/images/{img_path}')
-                    image = cv2.resize(image, (self.get_args().resize_to, self.get_args().resize_to))
+                    w, h = [int(x) for x in self._args.resize_to.split("x")]
+                    image = cv2.resize(image, (w, h))
                     
                     cv2.imwrite(f'{base}/{split}/images/{img_path}', image)
                     
-                    if self.get_args().contrast == 'CLAHE':
-                        utils.preprocess.generate_CLAHE(f'{base}/{split}/images/{img_path}', f'{base}/{split}/images/{img_path}', self.get_args().grayscale)
+                    if self._args.contrast == 'CLAHE':
+                        utils.preprocess.generate_CLAHE(f'{base}/{split}/images/{img_path}', f'{base}/{split}/images/{img_path}', self._args.grayscale)
 
                     else:
                         cv2.imwrite(f'{base}/{split}/images/{img_path}', image)
@@ -154,18 +262,24 @@ class Dataset():
         """
         print("moving images and labels to a single folder")
         
-        for split in os.listdir(f"{self.get_input_path()}"):
+        if os.path.exists("datasets/combined_ds"):
+            shutil.rmtree("datasets/combined_ds")
+        os.mkdir("datasets/combined_ds")
+        os.mkdir("datasets/combined_ds/images")
+        os.mkdir("datasets/combined_ds/labels")
+
+        for split in os.listdir(f"datasets/{self.get_input_path()}"):
             if split == "train" or split == "valid" or split == "test":
-                for image in os.listdir(f"{self.get_input_path()}/{split}/images"):
+                for image in os.listdir(f"datasets/{self.get_input_path()}/{split}/images"):
                     img_name, ext = os.path.splitext(image)
                     if len(self.get_exclude()) == 0:
-                        shutil.copy(f"{self.get_input_path()}/{split}/images/{image}", "datasets/combined_ds/images")
-                        shutil.copy(f"{self.get_input_path()}/{split}/labels/{img_name}.txt", "datasets/combined_ds/labels")
+                        shutil.copy(f"datasets/{self.get_input_path()}/{split}/images/{image}", "datasets/combined_ds/images")
+                        shutil.copy(f"datasets/{self.get_input_path()}/{split}/labels/{img_name}.txt", "datasets/combined_ds/labels")
                     else:
                         for name in self.get_exclude():
                             if name.lower() in image.lower():
-                                shutil.copy(f"{self.get_input_path()}/{split}/images/{image}", "datasets/combined_ds/images")
-                                shutil.copy(f"{self.get_input_path()}/{split}/labels/{img_name}.txt", "datasets/combined_ds/labels")
+                                shutil.copy(f"datasets/{self.get_input_path()}/{split}/images/{image}", "datasets/combined_ds/images")
+                                shutil.copy(f"datasets/{self.get_input_path()}/{split}/labels/{img_name}.txt", "datasets/combined_ds/labels")
                                 break
     
     def organize_to_names(self) -> None:
@@ -200,8 +314,8 @@ class Dataset():
                 # assume that the file is already in jpg form
 
                 if not name in self.get_exclude():
-                    shutil.copy(f"/combined_ds/images/{name}.jpg", f"/org_ds/{real_name}/{name}.jpg")
-                    shutil.copy(f"/combined_ds/labels/{label}", f"/org_ds/labels/{name}.txt")
+                    shutil.copy(f"datasets/combined_ds/images/{name}.jpg", f"datasets/org_ds/{real_name}/{name}.jpg")
+                    shutil.copy(f"datasets/combined_ds/labels/{label}", f"datasets/org_ds/labels/{name}.txt")
                         
                     x+=1
 
@@ -248,9 +362,8 @@ class Dataset():
         os.mkdir(f"datasets/{self.get_output_path()}")
         
         for split in splits:
-            os.mkdir(f"datasets/{self.get_output_path()}")
-            os.mkdir(f"datasets/{self.get_output_path()}")
 
+            os.mkdir(f"datasets/{self.get_output_path()}/{split}")
             os.mkdir(f"datasets/{self.get_output_path()}/{split}/images")
             os.mkdir(f"datasets/{self.get_output_path()}/{split}/labels")
             
@@ -264,18 +377,17 @@ class Dataset():
             for img in curr_split:
                 classname = None
                 for name in self.names:
-                    if name.lower() in file.lower():
+                    if name.lower() in img.lower():
                         classname = name
-                        print(classname)
                         break
                 
                 img_name, ext = os.path.splitext(img)
 
                 if os.path.exists(f"datasets/org_ds/labels/{img_name}.txt"):
                     shutil.copy(f"datasets/org_ds/labels/{img_name}.txt", f"datasets/{self.get_output_path()}/{split}/labels/{img_name}.txt")
-                    shutil.copy(f"datasets/org_ds/{classname}/{file}", f"datasets/{self.get_output_path()}/{split}/images/{file}")
-                elif os.path.exists(f"datasets/org_ds/backgrounds/{file}"):
-                    shutil.copy(f"datasets/org_ds/backgrounds/{file}", f"datasets/{self.get_output_path()}/{split}/images/{file}")
+                    shutil.copy(f"datasets/org_ds/{classname}/{img}", f"datasets/{self.get_output_path()}/{split}/images/{img}")
+                elif os.path.exists(f"datasets/org_ds/backgrounds/{img}"):
+                    shutil.copy(f"datasets/org_ds/backgrounds/{img}", f"datasets/{self.get_output_path()}/{split}/images/{img}")
                 
 
 
@@ -285,12 +397,14 @@ class Dataset():
 
 
     def split_dataset_obj(self) -> None:
+        self.remove_all_supp()
+        
         self.move_to_combined()
         
         print("organizing to names")
         self.organize_to_names()
         
-        ftrain, fval, ftest = self.get_train_val_test_splits(include_backgrounds = (self.get_backgrounds() > 0))
+        ftrain, fval, ftest = self.get_train_val_test_splits()
         
         self.reorganize_to_final(ftrain, fval, ftest)
         

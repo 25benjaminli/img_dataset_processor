@@ -5,12 +5,12 @@ import utils.restructure_obj
 import shutil
 import utils
 # get command line arguments
-
+from dataset import Dataset
 
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument('--input', type=str, help='path to old dataset - within the datasets folder', required=True)
+parser.add_argument('--input', type=str, help='path to dataset - within the datasets folder', required=True)
 
 
 args = parser.parse_args()
@@ -25,8 +25,6 @@ if not os.path.exists(f'datasets/{args.input}_copy'):
     print("making a copy of the current dataset so we don't lose it!")
     shutil.copytree(f'datasets/{args.input}', f'datasets/{args.input}_copy')
 
-utils.global_vars.ds_path = f'datasets/{args.input}'
-utils.misc.get_names_and_yaml()
+ds = Dataset(args.input)
 
-utils.misc.check_freqs()
-utils.restructure_obj.check_for_incorrect_labels()
+ds.check_stats_of_initial()

@@ -66,3 +66,5 @@ def main():
     ds = Dataset(args)
 
     ds.split_dataset_obj()
+
+main()
